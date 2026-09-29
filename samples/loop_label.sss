@@ -1,0 +1,11 @@
+; --- 2倍加算ループプログラム (loop_label.sss) ---
+	LOAD  ZERO
+LABEL:
+	ADD   VAR
+	STORE VAR
+	WRITE VAR
+	JUMP  LABEL
+ZERO:
+	JUMP  0
+VAR:
+	lit     1

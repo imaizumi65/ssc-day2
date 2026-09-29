@@ -18,7 +18,7 @@ class SSCAssembler:
         "R": 5, "READ": 5,
         "W": 6, "WRITE": 6,
         "S": 7, "SHIFT": 7,
-        "LIT": 8, "LITERAL": 8,
+        "D": 8, "LIT": 8, "LITERAL": 8,
         "DECL": 9, "STORAGE": 9,
     }
 
@@ -100,10 +100,10 @@ class SSCAssembler:
         # TODO: Pass 2 - 機械語コード生成
         #  parsed_lines を走査し、各命令に対応する Word オブジェクトを生成して
         #  target_mem に格納せよ。
-        #  - op_code == 8 (LIT)  : operand_str の定数値を直接 target_mem[pc].v に代入
-        #  - op_code == 9 (DECL) : メモリ確保のみのためスキップ
-        #  - 通常命令 (0-7)     : operand_str がシンボルテーブルにあればそのアドレスを使用し、
-        #                           Word(op=op_code, addr=addr) を生成して代入
+        #  - op_code == 8 (D / LIT) : operand_str の定数値を直接 target_mem[pc].v に代入
+        #  - op_code == 9 (DECL)    : メモリ確保のみのためスキップ
+        #  - 通常命令 (0-7)         : operand_str がシンボルテーブルにあればそのアドレスを使用し、
+        #                             Word(op=op_code, addr=addr) を生成して代入
         # -------------------------------------------------------------
         raise NotImplementedError("SSCAssembler.assemble() の Pass 2 を実装してください。")
 

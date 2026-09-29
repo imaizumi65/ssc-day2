@@ -1,0 +1,10 @@
+; --- 基本加算プログラム (add_label.sss) ---
+	LOAD	VAL1	; 後方ラベルの参照 (フォワード参照)
+	ADD	    VAL2
+	STORE	RESULT
+	WRITE	RESULT
+	JUMP	0	; プログラム停止
+
+VAL1:	LIT	3	; 定数 3
+VAL2:	LIT	5	; 定数 5
+RESULT:	DECL	1	; 領域確保 (初期値 0)
