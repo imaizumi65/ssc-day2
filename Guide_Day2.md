@@ -87,7 +87,7 @@ Day2/
 │   └── ssc_dis.py     # 【課題2対象】Day1で作成したディスアセンブラ（拡張対象）
 └── samples/           # 入出力テスト用サンプルプログラム群
     ├── add_label.sss  # ラベル付き加算アセンブリプログラム
-    └── loop_label.sss # ラベル付き2倍加算ループプログラム
+    └── loop_label.sss # ラベル付き2倍加算ループアセンブリプログラム
 ```
 
 ---
@@ -120,11 +120,15 @@ Day2/
 
 #### 実行確認手順
 
+**1. CLI（ターミナル）からの実行確認:**
 ターミナルで `Day2/` ディレクトリに移動し、以下のコマンドを実行してラベル付きアセンブリが正しくバイナリコード（`.sso` 形式）に変換されるか確認せよ。
 
 ```bash
 python src/ssc_asm.py samples/add_label.sss
 ```
+
+**2. IDE (PyCharm等) からの直接デバッグ実行:**
+`src/ssc_asm.py` の末尾にある `if __name__ == "__main__":` ブロック内のコメントを切り替えることで、組み込みサンプル (`source_text=SAMPLE_PROGRAM`) や指定ファイル (`file="..."`) の動作確認をIDEから直接行えます。
 
 ---
 
@@ -134,18 +138,22 @@ python src/ssc_asm.py samples/add_label.sss
 
 #### 拡張ステップ1: コマンドライン引数（`-l` オプション）の追加
 
-`main()` 関数内の `argparse` 設定部分に、ロングフォーマット出力を指定する `-l` オプションを追加する。
+`main()` 関数内の `argparse` 設定およびパラメータ確定部分に、ロングフォーマット出力を指定する `-l` オプションを追加する。
 
 ```python
-# main() 関数内の変更例
+# 1. オプションの追加
 parser.add_argument(
     "-l",
     action="store_true",
     help="Output in long assembly format with auto-generated labels",
 )
+
+# 2. パラメータの確定（直接引数 > CLI引数）
+target_file = file if file is not None else parsed_args.file
+use_lflag = lflag if lflag is not None else parsed_args.l
 ```
 
-さらに、`parsed_args.l` の値を読み取り、`disassembler.disassemble(memory, lflag=use_lflag)` のように `lflag` 引数として渡すよう処理を拡張する。
+確定した `use_lflag` を、`disassembler.disassemble(memory, lflag=use_lflag)` のように `lflag` 引数として渡すよう処理を接続する。
 
 #### 拡張ステップ2: アドレスの役割を表す `Role` の定義
 
@@ -249,5 +257,5 @@ python src/ssc_asm.py samples/sample_label.sss | python src/ssc_dis.py -l
 
 1. 実装した `src/ssc_asm.py` の Pass 2 コード生成処理のコードと解説。
 2. 拡張した `src/ssc_dis.py` の `_check()` メソッドおよび `-l` オプション処理のコードと解説。
-3. 課題1および課題2の実行ログ・スクリーンショット。
+3. 課題1および課題2の実行結果のスクリーンショットまたはログ出力。
 4. 考察：アセンブラにおける2パス解析の必要性と、逆アセンブラにおいて静的解析のみで元のラベル名（文字面）を完全復元することの限界・困難さについて述べよ。
