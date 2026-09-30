@@ -16,15 +16,15 @@ class SSCAssembler:
 
     # 命令および疑似命令のニーモニックマップ
     OP_MAP = {
-        "J": 0, "JMP": 0, "JUMP": 0,
-        "A": 1, "ADD": 1,
-        "B": 2, "SUB": 2,
-        "L": 3, "LOAD": 3,
-        "T": 4, "STORE": 4,
-        "R": 5, "READ": 5,
-        "W": 6, "WRITE": 6,
+        "J": 0, "JMP": 0, "JUMP": 0, "JPC": 0,
+        "A": 1, "ADD": 1, "PLUS": 1, "PLS": 1,
+        "B": 2, "SUB": 2, "MINUS": 2,
+        "L": 3, "LOAD": 3, "LD": 3,
+        "T": 4, "STORE": 4, "STA": 4, "ST": 4, "SAVE": 4, "STO": 4,
+        "R": 5, "READ": 5, "RD": 5,
+        "W": 6, "WRITE": 6, "WR": 6,
         "S": 7, "SHIFT": 7,
-        "D": 8, "LIT": 8, "LITERAL": 8,
+        "D": 8, "DATA": 8, "LIT": 8, "LITERAL": 8, "VALUE": 8,
         "DECL": 9, "STORAGE": 9,
     }
 
@@ -64,7 +64,7 @@ class SSCAssembler:
                 label = label_part.strip()
                 line = line.strip()
 
-            # TODO: ラベルが存在する場合、self.symbol_table[label] = pc で登録せよ
+            # TODO: ラベルが存在する場合、self.symbol_table[label] = pc で登録
 
             if not line:
                 continue
@@ -140,9 +140,10 @@ def main(
     parsed_args = parser.parse_args(args_list)
     target_file = file if file is not None else parsed_args.file
 
-    # 入力ソースの確定処理 (明示文字列 > 指定ファイル > 標準入力)
+    # ソースコード読み込み（直接指定 -> ファイル指定 -> 標準入力 の順で評価）
     if source_text is None:
         if target_file:
+            # パターンA: ファイルから読み込み
             try:
                 with open(target_file, "r", encoding="utf-8") as f:
                     source_text = f.read()
@@ -150,16 +151,18 @@ def main(
                 sys.stderr.write(f"ssc_asm: {e}\n")
                 sys.exit(2)
         else:
+            # パターンB: 標準入力（パイプや対力入力）から読み込み
             source_text = sys.stdin.read()
 
     assembler = SSCAssembler()
     try:
         assembled_mem = assembler.assemble(source_text)
-    except (SyntaxError, MemoryError, NameError, NotImplementedError) as e:
+    except (SyntaxError, MemoryError, NameError) as e:
         sys.stderr.write(f"ssc_asm error: {e}\n")
         sys.exit(1)
 
-    ssc_write(assembled_mem, sys.stdout)
+    for i, w in enumerate(assembled_mem):
+        print(f"{i:02d}: {w.to_bin()}")
 
 
 # デフォルトのセルフテスト用サンプルプログラム
@@ -176,7 +179,6 @@ N_2:
 V_out:
     DECL  1
 """
-
 
 if __name__ == "__main__":
     # =========================================================================
