@@ -1,5 +1,11 @@
+import io
 import sys
-from ssc_core import AMAX, Word
+from pathlib import Path
+
+from ssc_core import AMAX, Word, ssc_write
+
+# from ssc_asm import * 実行時の名前空間汚染を防止
+__all__ = ["SSCAssembler"]
 
 
 class SSCAssembler:
@@ -43,9 +49,9 @@ class SSCAssembler:
         pc = 0
 
         # -------------------------------------------------------------
-        # TODO: Pass 1 - ラベル解析とアドレス計算
-        #  各行から "ラベル:" を検出し、現在のアドレス (pc) を self.symbol_table に登録せよ。
-        #  DECL 命令(op_code == 9) の場合は、指定されたサイズ分 pc を進めること。
+        # Pass 1 - ラベル解析とアドレス計算
+        #  各行から "ラベル:" を検出し、現在のアドレス (pc) を self.symbol_table に登録する。
+        #  DECL 命令(op_code == 9) の場合は、指定されたサイズ分 pc を進める。
         # -------------------------------------------------------------
         for line_num, raw_line in enumerate(lines, 1):
             line = raw_line.split(";")[0].split("/")[0].strip()
@@ -59,8 +65,6 @@ class SSCAssembler:
                 line = line.strip()
 
             # TODO: ラベルが存在する場合、self.symbol_table[label] = pc で登録せよ
-            if label:
-                self.symbol_table[label] = pc
 
             if not line:
                 continue
@@ -115,18 +119,28 @@ def main(
     file: str | None = None,
     source_text: str | None = None,
 ):
+    """アセンブラのメイン関数
+
+    CLIコマンド、パイプライン（標準入力）、PyCharm等からの直接呼び出しの
+    全てに対応しています。
+    """
     import argparse
 
     parser = argparse.ArgumentParser(
         prog="ssc_asm", description="SSC Assembler (2-Pass Assembler)"
     )
     parser.add_argument(
-        "file", nargs="?", type=str, default=None, help="Input .sss file"
+        "file",
+        nargs="?",
+        type=str,
+        default=None,
+        help="Input .sss file (default: stdin)",
     )
 
     parsed_args = parser.parse_args(args_list)
     target_file = file if file is not None else parsed_args.file
 
+    # 入力ソースの確定処理 (明示文字列 > 指定ファイル > 標準入力)
     if source_text is None:
         if target_file:
             try:
@@ -145,9 +159,38 @@ def main(
         sys.stderr.write(f"ssc_asm error: {e}\n")
         sys.exit(1)
 
-    for i, w in enumerate(assembled_mem):
-        print(f"{i:02d}: {w.to_bin()}")
+    ssc_write(assembled_mem, sys.stdout)
+
+
+# デフォルトのセルフテスト用サンプルプログラム
+SAMPLE_PROGRAM = """
+    LOAD  N_1
+    ADD   N_2
+    STORE V_out
+    WRITE V_out
+    JUMP  0
+N_1:
+    LIT   3
+N_2:
+    LIT   5
+V_out:
+    DECL  1
+"""
 
 
 if __name__ == "__main__":
-    main()
+    # =========================================================================
+    # 【PyCharm / IDE デバッグ時の使い方ガイド】
+    #
+    # IDE（PyCharm等）からこのファイルを直接「Run / Debug」する場合、
+    # カレントディレクトリは src/ になるため、samples/ へのパスには `../` を付けます。
+    # =========================================================================
+
+    # --- パターン A [基本テスト]: 組込サンプルプログラムを渡してアセンブル ---
+    main(source_text=SAMPLE_PROGRAM)
+
+    # --- パターン B [ファイル指定]: 指定した .sss ファイルをロードしてアセンブル ---
+    # main(file="../samples/add_label.sss")
+
+    # --- パターン C [標準入力]: CLIのパイプラインや手動入力をテスト（引数なし） ---
+    # main()
