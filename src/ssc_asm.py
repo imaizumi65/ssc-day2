@@ -54,7 +54,11 @@ class SSCAssembler:
         #  DECL 命令(op_code == 9) の場合は、指定されたサイズ分 pc を進める。
         # -------------------------------------------------------------
         for line_num, raw_line in enumerate(lines, 1):
-            line = raw_line.split(";")[0].split("/")[0].strip()
+            # コメント (';' および '#') の除去
+            line = raw_line.split(";")[0].split("#")[0].strip()
+            # 簡易表記 '/' をスペースに置換 (例: "L/5" -> "L 5")
+            line = line.replace("/", " ")
+
             if not line:
                 continue
 
@@ -64,7 +68,7 @@ class SSCAssembler:
                 label = label_part.strip()
                 line = line.strip()
 
-            # TODO: ラベルが存在する場合、self.symbol_table[label] = pc で登録
+            # TODO: ラベルが存在する場合、大文字化して self.symbol_table に登録
 
             if not line:
                 continue
@@ -75,7 +79,7 @@ class SSCAssembler:
 
             if opcode_str not in self.OP_MAP:
                 raise SyntaxError(
-                    f"Line {line_num}: Unknown mnemonic '{opcode_str}'"
+                    f"Line {line_num}: Unknown mnemonic '{tokens[0]}'"
                 )
 
             op_code = self.OP_MAP[opcode_str]
@@ -151,7 +155,7 @@ def main(
                 sys.stderr.write(f"ssc_asm: {e}\n")
                 sys.exit(2)
         else:
-            # パターンB: 標準入力（パイプや対力入力）から読み込み
+            # パターンB: 標準入力（パイプや対話入力）から読み込み
             source_text = sys.stdin.read()
 
     assembler = SSCAssembler()
